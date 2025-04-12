@@ -1,0 +1,33 @@
+#####33#######처음 aws eks describe-cluster     --name "${CLUSTER_NAME}" --query "cluster.resourcesVpcConfig.clusterSecurityGroupId" --output json 받았을 떄 모습일 거임#################
+# apiVersion: v1
+# data:
+#   mapRoles: |
+#     - groups:
+#       - system:bootstrappers
+#       - system:nodes
+#       rolearn: arn:aws:iam::637423586845:role/jdy-test-eks-managed-node-group
+#       username: system:node:{{EC2PrivateDNSName}}
+# kind: ConfigMap
+# metadata:
+#   name: aws-auth
+#   namespace: kube-system
+###############################################################################################################################################################
+########################추가############################
+apiVersion: v1
+data:
+  mapRoles: |
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::637423586845:role/jdy-test-eks-managed-node-group
+      username: system:node:{{EC2PrivateDNSName}}
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::637423586845:role/KarpenterNodeRole-jdy-dev
+      username: system:node:{{EC2PrivateDNSName}}
+
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system

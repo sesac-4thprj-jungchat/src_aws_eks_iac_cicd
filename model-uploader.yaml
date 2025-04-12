@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: model-uploader
+spec:
+  containers:
+  - name: uploader
+    image: ubuntu
+    command: ["sleep", "3600"]  # 1시간 동안 실행
+    volumeMounts:
+    - name: model-storage
+      mountPath: /data
+  volumes:
+  - name: model-storage
+    persistentVolumeClaim:
+      claimName: openchat-model-pvc
