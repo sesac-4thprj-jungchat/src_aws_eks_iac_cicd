@@ -1,0 +1,105 @@
+# apiVersion: karpenter.sh/v1beta1
+# kind: NodePool
+# metadata:
+#   name: gpu
+# spec:
+#   template:
+#     metadata:
+#       labels:
+#         node: gpu
+#     spec:
+#       nodeClassRef:
+#         name: gpu                                   # 사용할 노드클래스 이름
+#       taints:                                       # 이 노드풀을 사용할 deploy/pod에 대한 조건을 걸기 위해  
+#       - effect: NoSchedule                          # nodepool-platform.yaml과 다르게 taint가 있음!(toleration있는 deploy만 이쪽에 할당 될 수 있도록)
+#         key: node
+#         value: gpu
+#       requirements:
+#         # 아래는 중복으로 보임 - 첫 번째 항목만 남겨야 함
+#         - key: "karpenter.sh/capacity-type" 
+#           operator: In
+#           values: ["spot", "on-demand"]  # 변경: on-demand 추가
+        
+#         # 인스턴스 타입은 유지
+#         - key: "node.kubernetes.io/instance-type"
+#           operator: In
+#           values: ["g4dn.xlarge", "g4dn.2xlarge", "g5.xlarge", "g5.2xlarge"]
+        
+#         - key: "karpenter.k8s.aws/instance-generation"
+#           operator: Gt
+#           values: ["5"]
+        
+#         # 가용 영역 범위를 더 넓힘
+#         - key: "topology.kubernetes.io/zone"
+#           operator: In
+#           values: ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c", "ap-northeast-2d"]  # 변경: 모든 가용 영역 추가
+        
+#         - key: "kubernetes.io/arch"
+#           operator: In
+#           values: ["amd64"]
+        
+#         # 중복 제거 필요: 위에서 이미 동일한 설정이 있음
+#         # - key: "karpenter.sh/capacity-type"
+#         #   operator: In
+#         #   values: ["spot"]
+        
+#         # GPU 인스턴스 선택 조건 유지
+#         - key: "karpenter.k8s.aws/instance-gpu-count"
+#           operator: Gt
+#           values: ["0"]
+#   disruption:
+#     consolidationPolicy: WhenUnderutilized
+#     expireAfter: 720h
+#   limits:
+#     cpu: 1000
+
+
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: gpu
+spec:
+  template:
+    metadata:
+      labels:
+        node: gpu
+    spec:
+      nodeClassRef:
+        name: gpu
+      taints:
+        - effect: NoSchedule
+          key: node
+          value: gpu
+      requirements:
+        # spot과 on-demand 모두 허용
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ["spot", "on-demand"]
+        
+        # 40GB 내외의 GPU 메모리를 가진 인스턴스 타입으로 제한
+        # (g4dn.xlarge는 ~16GB, g5.xlarge는 ~24GB, g5.4xlarge는 ~48GB의 GPU 메모리)
+        - key: "node.kubernetes.io/instance-type"
+          operator: In
+          values: ["g4dn.xlarge", "g4dn.2xlarge", "g4dn.4xlarge", "g5.xlarge", "g5.2xlarge", "g5.4xlarge", "p3.2xlarge"]
+        
+        # - key: "karpenter.k8s.aws/instance-generation"
+        #   operator: Gt
+        #   values: ["5"]
+        
+        - key: "topology.kubernetes.io/zone"
+          operator: In
+          values: ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
+        
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+        
+        - key: "karpenter.k8s.aws/instance-gpu-count"
+          operator: Gt
+          values: ["0"]
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: 720h
+  limits:
+    cpu: 4000
+    memory: 80Gi

@@ -1,0 +1,14 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"          #pvc 생성 시(yaml) storage class 지정 안 하면 default storage class 값으로 하겠냐(무조건 들어가야 하니) 
+allowVolumeExpansion: true                                       #볼륨 확장 여부: true
+provisioner: ebs.csi.aws.com                                     #provisioner 설정(AWS CSI Driver)
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3          #gp3
+
+## disable gp2 default storage class 
+# kubectl patch storageclass gp2 -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'

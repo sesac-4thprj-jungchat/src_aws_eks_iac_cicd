@@ -1,0 +1,108 @@
+# # cat EC2NodeClass.yaml | envsubst | kubectl apply -f -
+# #노드클래스: 구체적인 설정 같을 걸 정함(소프트웨어적)
+# apiVersion: karpenter.k8s.aws/v1beta1 
+# kind: EC2NodeClass                            
+# metadata:
+#   name: default
+# spec:
+#   amiFamily: AL2 # Amazon Linux 2
+#   role: "KarpenterNodeRole-jdy-dev" # replace with your cluster name
+#   subnetSelectorTerms:                                                        #노드 클래스->테그 기반(subnet, security group에도 테그가 있어야 그걸 사용함)
+#   - tags:
+#       karpenter.sh/discovery: "jdy-dev" # replace with your cluster name
+#   securityGroupSelectorTerms:
+#   - tags:
+#       karpenter.sh/discovery: "jdy-dev" # replace with your cluster name
+#   blockDeviceMappings:
+#   - deviceName: /dev/xvda
+#     ebs:
+#       volumeSize: 100Gi
+#       volumeType: gp3
+#       iops: 3000
+#       encrypted: true
+#       deleteOnTermination: true
+#       throughput: 125
+########################################################################################
+########################################################################################
+
+
+# apiVersion: karpenter.k8s.aws/v1beta1 
+# kind: EC2NodeClass                            
+# metadata:
+#   name: gpu                              #nodepool-service-gpu.yaml에서 ref로 갖다 씀
+# spec:
+#   # amiFamily: AL2 제거(특정 AMI ID를 사용할 때는 필요하지 않음)
+#   # amiFamily: AL2 # Amazon Linux 2
+
+#   # amiSelectorTerms:
+#   #   - name: amazon-linux-2-nvidia-gpu
+#   #     owner: amazon
+
+#   # amiFamily는 필수값이므로 유지
+#   amiFamily: Custom # Custom으로 변경
+#   # AMI 직접 지정
+#   amiSelectorTerms:
+#     - id: ami-06b528176e0be2940
+
+#   # amiSelectorTerms:
+#   #   - name: "Deep Learning AMI GPU*"
+#   #     owner: amazon
+
+#     # - name: "Deep Learning AMI GPU PyTorch 2.1.0 (Amazon Linux 2)*"
+#     #   owner: amazon
+#   role: "KarpenterNodeRole-jdy-dev" # 클러스터 이름에 맞게 변경
+#   subnetSelectorTerms:                                                     
+#   - tags:
+#       karpenter.sh/discovery: "jdy-dev" # 클러스터 이름에 맞게 변경
+#   securityGroupSelectorTerms:
+#   - tags:
+#       karpenter.sh/discovery: "jdy-dev" # 클러스터 이름에 맞게 변경
+#   blockDeviceMappings:
+#   - deviceName: /dev/xvda
+#     ebs:
+#       volumeSize: 100Gi  # GPU 워크로드를 위해 더 큰 디스크 용량 하려면 200
+#       volumeType: gp3
+#       iops: 3000         # 높은 IOPS는 6000
+#       encrypted: true
+#       deleteOnTermination: true
+#       throughput: 125     # 높은 처리량 쓰려면 250
+#   tags:
+#     NodeType: GPU  # 식별을 위한 태그
+#   # metadataOptions:
+#   #   httpEndpoint: enabled
+#   #   httpProtocolIPv6: disabled
+#   #   httpPutResponseHopLimit: 2
+#   #   httpTokens: required
+#   # userData: |
+#   #   #!/bin/bash
+#   #   # GPU 드라이버 설정 검증 및 nvidia-container-runtime 상태 확인
+#   #   systemctl status nvidia-container-runtime.service
+#   #   nvidia-smi
+
+
+
+########################################################################################
+apiVersion: karpenter.k8s.aws/v1beta1 
+kind: EC2NodeClass                            
+metadata:
+  name: gpu
+spec:
+  amiFamily: AL2 # Amazon Linux 2
+  role: "KarpenterNodeRole-jdy-dev"
+  subnetSelectorTerms:                                                  
+  - tags:
+      karpenter.sh/discovery: "jdy-dev"
+  securityGroupSelectorTerms:
+  - tags:
+      karpenter.sh/discovery: "jdy-dev"
+  blockDeviceMappings:
+  - deviceName: /dev/xvda
+    ebs:
+      volumeSize: 100Gi
+      volumeType: gp3
+      iops: 3000
+      encrypted: true
+      deleteOnTermination: true
+      throughput: 125
+  tags:
+    NodeType: GPU

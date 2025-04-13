@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-action-test
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: github-action-test
+  template:    
+    metadata:
+      labels:
+        app: github-action-test
+    spec:
+      containers:
+      - name: github-action-test
+        image: 637423586845.dkr.ecr.ap-northeast-2.amazonaws.com/github-action-test:v1.0.1

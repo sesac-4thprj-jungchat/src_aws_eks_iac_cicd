@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application                   #<<ArgoCD Application이란: ArgoCD에서 자체적으로 만든 CRD, Destination, Source, syncPolicy로 구성
+metadata:
+  name: image-server
+  namespace: argocd
+spec:
+  destination:
+    name: in-cluster           #<<어플리케이션 배포는 in-cluster 즉, ArgoCD가 설치되어 있는 클러스터 내에 설치
+    namespace: sns             #어플리케이션이 설치될 namespace를 지정
+  project: default             #네임스페이스를 쪼개거나, 네특정 네임스페이스끼리 묶거나도 할 수 있는 권한 관련
+  source:                      #source: github을 의미
+    helm:                            #helm chart로 구성되어 있다겸 이렇게 구성해야 함
+      releaseName: image-server
+      valueFiles:
+      - ci/jerry-dev-values.yaml                                          # 이 아래의↓↓ 경로 또 아래의 values 파일(helm에서의)의 경로를 의미. 지정
+    path: sns/image-server                                                # 이 아래의↓↓ repo 주소(레파지토리) 안에 있는 경로임(source 요소 안에서 지금 정의되고 있는 거니까까)
+    repoURL: https://github.com/Fastcampus-Kubernetes-Devops/Part_7.git   # 내 repo 주소
+    targetRevision: HEAD
+  syncPolicy:                          #위에서 지정한 Github에 있는 소스와(source 요소) 실제 cluster의 상태(destination)를 싱크 어떻게 할 건지
+    syncOptions:
+    - CreateNamespace=true             # sns 없는 경우 생성
+    # autoSync:                        
+    #   prune: true
+    #   selfHeal: true

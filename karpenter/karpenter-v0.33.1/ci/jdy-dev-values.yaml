@@ -1,0 +1,66 @@
+# cat ci/jerry-dev-values.yaml | envsubst | helm install karpenter . -f - 
+# 추가설정들도 많지만 다 알지 못하고 그때그때 서치. 필요한 부분만, 변경되는 부분만 정리
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::637423586845:role/KarpenterControllerRole-jdy-dev 
+
+settings:
+  clusterName: jdy-dev
+
+controller:     #카펜터 권고사항에 따라 limits,request 설정
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: karpenter.sh/nodepool
+          operator: DoesNotExist
+      - matchExpressions:
+        - key: eks.amazonaws.com/nodegroup
+          operator: In
+          values:
+          - karpenter #karpenter
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - topologyKey: "kubernetes.io/hostname"
+
+
+
+#아래는 원래 실습제공으로 있던 파일(jerry-dev-values.yaml)
+# serviceAccount:
+#   annotations:
+#     eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterControllerRole-${CLUSTER_NAME}  
+
+# settings:
+#   clusterName: ${CLUSTER_NAME}
+
+# controller:
+#   resources:
+#     limits:
+#       memory: 1Gi
+#     requests:
+#       cpu: 100m
+#       memory: 1Gi
+
+# affinity:
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: karpenter.sh/nodepool
+#           operator: DoesNotExist
+#       - matchExpressions:
+#         - key: eks.amazonaws.com/nodegroup
+#           operator: In
+#           values:
+#           - ${NODEGROUP} #karpenter
+#   podAntiAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#     - topologyKey: "kubernetes.io/hostname"

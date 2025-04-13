@@ -1,0 +1,27 @@
+# cat EC2NodeClass.yaml | envsubst | kubectl apply -f -
+#노드클래스: 구체적인 설정 같을 걸 정함(소프트웨어적)
+apiVersion: karpenter.k8s.aws/v1beta1 
+kind: EC2NodeClass                            
+metadata:
+  name: default
+spec:
+  amiFamily: AL2 # Amazon Linux 2
+  role: "KarpenterNodeRole-jdy-dev" # replace with your cluster name
+  subnetSelectorTerms:                                                        #노드 클래스->테그 기반(subnet, security group에도 테그가 있어야 그걸 사용함)
+  - tags:
+      karpenter.sh/discovery: "jdy-dev" # replace with your cluster name
+  securityGroupSelectorTerms:
+  - tags:
+      karpenter.sh/discovery: "jdy-dev" # replace with your cluster name
+  blockDeviceMappings:
+  - deviceName: /dev/xvda
+    ebs:
+      volumeSize: 100Gi
+      volumeType: gp3
+      iops: 3000
+      encrypted: true
+      deleteOnTermination: true
+      throughput: 125
+
+
+

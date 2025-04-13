@@ -1,0 +1,15 @@
+# serviceAccount:
+#   create: true
+#   name: aws-load-balancer-controller
+#   annotations:
+#     eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/load-balancer-controller-${CLUSTER_NAME}
+# clusterName: ${CLUSTER_NAME}  #jerry-dev
+
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::637423586845:role/load-balancer-controller-jdy-dev   #637423586845
+clusterName: jdy-dev  #jerry-dev
+
+vpcId: vpc-011e723c873baa9bd    #<<<aws eks describe-cluster --name jdy-dev --query "cluster.resourcesVpcConfig.vpcId" --output text를 통해 나온 vpcID 수동으로 추가해주니 파드 정상실행 됨..

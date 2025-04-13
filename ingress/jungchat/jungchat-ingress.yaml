@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jungchat
+  namespace: default
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: sg-external
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:637423586845:certificate/0c1bd662-14a7-4a08-863f-d1ccf3ade585  #이전에 도메인주소 가지고 만든 인증서임
+    external-dns.alpha.kubernetes.io/hostname: www.jungchat.shop    #<<★만약 기존에 만들어진 인증서에 
+spec:
+  ingressClassName: alb 
+  rules:
+  - host: www.jungchat.shop
+    http:
+      paths:
+      - path: /                #여기 path를 변경해주면서 group으로 하여 하나의 alb를 여러 service가 이용할 수 있음 
+        pathType: Prefix     #<<Prefix 해줘야 /경로 뒤의 다른 것들도 라우팅 해중(ex) /users  /login/~ 등)
+        backend:
+          service:
+            name: jungchat     #<<이거 서비스명이어야 함  배포하는 jungchat-service.yaml에서 metadata.name보면 jungchat임
+            port:
+              number: 80     #<<실제론 service의 port이고, service를 보면 port: 80, targetport(pod의 port): 8080으로 되어 있고, 위에서 annotation으로 alb.ingress.kubernetes.io/target-type: ip 로 타입을 하면 LB에서 직접 taretport로 전달 됨
+
+
+####################################원래 있던 코드############################
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: echoserver
+#   namespace: default
+#   annotations:
+#     alb.ingress.kubernetes.io/scheme: internet-facing
+#     alb.ingress.kubernetes.io/target-type: ip
+#     alb.ingress.kubernetes.io/group.name: sg-external
+#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+#     alb.ingress.kubernetes.io/ssl-redirect: "443"
+#     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:{account_id}:certificate/{certificate_id}
+#     external-dns.alpha.kubernetes.io/hostname: echoserver-dev.jerryljh.me
+# spec:
+#   ingressClassName: alb
+#   rules:
+#   - host: echoserver-dev.jerryljh.me
+#     http:
+#       paths:
+#       - path: /echo-server
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: echoserver
+#             port:
+#               number: 80
