@@ -1,0 +1,113 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: llm
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: llm
+#   template:
+#     metadata:
+#       labels:
+#         app: llm
+#     spec:
+#       containers:
+#         - name: llm
+#           image: 637423586845.dkr.ecr.ap-northeast-2.amazonaws.com/github-action-test:llmn-v1.0.9
+#           ports:
+#             - containerPort: 8001
+#             - containerPort: 8002   # 두 번째 포트 추가
+#           env:
+#             - name: HUGGINGFACE_TOKEN
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: llm-api-secret
+#                   key: HUGGINGFACE_TOKEN
+#             - name: COHERE_API_KEY
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: llm-api-secret
+#                   key: COHERE_API_KEY
+
+
+###################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      nodeSelector:       #<<<노드 셀렉터도 추가함!
+        node: gpu
+      # GPU 전용 노드(gpu NodePool)로 스케줄링될 수 있도록 tolerations 추가
+      tolerations:                        #<<gpu 노드풀 사용을 위해
+        - key: "node"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+################     노드 하나당 pod 하나뜨게 만들려면 affinity 적용#######################
+      # affinity:
+      #   podAntiAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       - labelSelector:
+      #           matchExpressions:
+      #             - key: app
+      #               operator: In
+      #               values:
+      #                 - llm
+      #         topologyKey: "kubernetes.io/hostname"  # 보통 이 값을 그대로 사용
+      
+      # 필요한 경우 nodeSelector로 명시적 제어도 가능
+      # nodeSelector:
+      #   node: gpu
+##########################################################################################
+      containers:
+        - name: llm
+          image: 637423586845.dkr.ecr.ap-northeast-2.amazonaws.com/github-action-test:llm-v2.2.0
+          ports:
+            - containerPort: 8001
+            # - containerPort: 8002   # 두 번째 포트 추가 (gRPC or inference용 등)
+          resources:
+            requests:
+              nvidia.com/gpu: 1       #<<<<limits랑 일치해야 한다고 애러뜸(deploy 애러)  ##k8s에서는 아직 GPU는 공유할 수 없는 리소스이므로 requests와 limits 값이 반드시 동일해야!!(gpu 아닌 건 괜찬음)
+            limits:
+              nvidia.com/gpu: 1        #<<<<request랑 일치해야 한다고 애러뜸(deploy 애러)  #k8s에서는 아직 GPU는 공유할 수 없는 리소스이므로 requests와 limits 값이 반드시 동일해야!!(gpu 아닌 건 괜찬음)
+            # GPU가 없는 노드에는 스케줄되지 않음
+            # GPU가 여러 개 있는 노드라도, 딱 1개만 이 파드에 할당됨
+            # Kubernetes는 GPU를 공유하지 않음 (1개 단위로 독점)?
+            # Kubernetes에서는 아직 GPU VRAM 제한 설정은 불가능(k8s에서 GPU를 request할 수는 없다는 뜻)
+            # 어떤 GPU가 잡혔는지 보려면? kubectl exec -it <pod> -- nvidia-smi
+            #Kubernetes에서는 GPU 개수만 리소스로 인식하고 관리하지, VRAM(예: 24GB, 40GB, 80GB) 을 세부적으로 할당하거나 제어할 수는 없음.->노드풀 통해 알아서 하도록 설정
+          env:
+            # LLM 서비스에 필요한 시크릿 환경변수 설정
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api-secret
+                  key: HUGGINGFACE_TOKEN
+            - name: COHERE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-api-secret
+                  key: COHERE_API_KEY
+            - name: MODEL_PATH
+              value: "/app/models/OpenChat-3.5-7B-Mixtral-v2.0.i1-Q4_K_M.gguf"    #모델 마운트되어 있는 경로
+          volumeMounts:
+            - name: model-mount
+              mountPath: /app/models    # 컨테이너 내부 경로 (/app은 WORKDIR)
+      volumes:
+        - name: model-mount
+          persistentVolumeClaim:
+            claimName: openchat-model-pvc
+
+
+# 컨테이너 내부 경로 (/app은 WORKDIR)

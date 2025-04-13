@@ -49,3 +49,4 @@ terraform.rc
 # .terraform/providers/registry.terraform.io/hashicorp/kubernetes/2.36.0/linux_amd64/terraform-provider-kubernetes_v2.36.0_x5
 # .terraform/providers/registry.terraform.io/hashicorp/kubernetes/2.24.0/linux_amd64/terraform-provider-kubernetes_v2.24.0_x5
 # .terraform/providers/registry.terraform.io/hashicorp/tls/4.0.6/linux_amd64/terraform-provider-tls_v4.0.6_x5
+githubWorkflow/

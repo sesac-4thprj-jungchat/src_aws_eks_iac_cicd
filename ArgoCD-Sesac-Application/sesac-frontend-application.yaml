@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sesac-app-frontend
+  namespace: argocd
+spec:
+  destination:
+    name: in-cluster
+    namespace: default
+  project: default
+  source:
+    path: Application/frontend
+    repoURL: https://github.com/gguldong/argocd-helm.git
+    targetRevision: HEAD
+  syncPolicy:                          #위에서 지정한 Github에 있는 소스와(source 요소) 실제 cluster의 상태(destination)를 싱크 어떻게 할 건지
+    syncOptions:
+    - CreateNamespace=true             # sns 없는 경우 생성
+    # autoSync:                        
+    #   prune: true
+    #   selfHeal: true
