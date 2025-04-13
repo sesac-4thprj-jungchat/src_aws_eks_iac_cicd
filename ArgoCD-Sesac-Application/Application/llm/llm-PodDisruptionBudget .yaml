@@ -1,0 +1,12 @@
+#GPU 노드는 고가이고, 추론 서비스는 중단되면 안 되기 때문에 한 번에 파드가 모두 내려가지 않도록 보호
+
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: llm-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: llm

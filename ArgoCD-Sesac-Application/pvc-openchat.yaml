@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openchat-model-pvc
+  namespace: default
+spec:
+  accessModes:
+  - ReadWriteOnce
+  # - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  # storageClassName: "ebs-sc"      #<<주석 풀고 그냥 써도 되지만 default SC가 우리가 만들고 default로 설정해놓은 gp3 타입인 ebs-sc로 잘 만들어지는지 보기 위해 주석하고 만들어보자
+  

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-ingress
+  namespace: default
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: sg-external
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:637423586845:certificate/0c1bd662-14a7-4a08-863f-d1ccf3ade585
+    external-dns.alpha.kubernetes.io/hostname: www.jungchat.shop
+    # 다음 어노테이션 추가
+    alb.ingress.kubernetes.io/rewrite-path: "/api/(.*)/$1"
+spec:
+  ingressClassName: alb 
+  rules:
+  - host: www.jungchat.shop
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8000
